@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana
+        volumeMounts:
+        - name: grafana-volume
+          mountPath: /var/lib/grafana
+        ports:
+        - containerPort: 3000
+      volumes:
+      - name: grafana-volume
+        hostPath:
+          path: /var/k8s/grafana
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+spec:
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: grafana
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: grafana
+spec:
+  rules:
+  - host: grafana.{{ domain }}
+    http:
+      paths:
+      - backend:
+          serviceName: grafana
+          servicePort: http

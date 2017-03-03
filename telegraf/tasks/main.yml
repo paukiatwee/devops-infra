@@ -1,0 +1,20 @@
+- name: Ensure InfluxData repo is enabled
+  yum_repository:
+    name: influxdata
+    description: InfluxData
+    baseurl: https://repos.influxdata.com/centos/7/$basearch/stable
+    gpgcheck: yes
+    gpgkey: https://repos.influxdata.com/influxdb.key
+
+- name: Ensure Telegraf is installed
+  yum: name="{{item}}"
+  with_items:
+    - telegraf
+
+- name: Ensure Telegraf conf is updated
+  template: src=telegraf.conf dest=/etc/telegraf/telegraf.conf
+
+- name: Ensure Telegraf service is started
+  service: name="{{item}}" enabled=yes state=started
+  with_items:
+    - telegraf
