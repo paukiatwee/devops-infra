@@ -1,74 +1,78 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: influxdb-volume
+  name: gogs-volume
 spec:
   capacity:
-    storage: 5Gi
+    storage: 2Gi
   accessModes:
     - ReadWriteMany
   glusterfs:
     endpoints: gluster-cluster
-    path: influxdb-volume
+    path: gogs-volume
     readOnly: false
   persistentVolumeReclaimPolicy: Retain
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: influxdb-claim
+  name: gogs-claim
 spec:
   accessModes:
   - ReadWriteMany
   resources:
      requests:
-       storage: 5Gi
+       storage: 2Gi
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: influxdb
+  name: gogs
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: influxdb
+        app: gogs
     spec:
       containers:
-      - name: influxdb
-        image: influxdb
+      - name: gogs
+        image: gogs/gogs
         volumeMounts:
-        - name: influxdb-volume
-          mountPath: /var/lib/influxdb
+        - name: gogs-volume
+          mountPath: /data
         ports:
-        - containerPort: 8086
+        - containerPort: 22
+        - containerPort: 3000
       volumes:
-      - name: influxdb-volume
+      - name: gogs-volume
         persistentVolumeClaim:
-          claimName: influxdb-claim
+          claimName: gogs-claim
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: influxdb
+  name: gogs
 spec:
   ports:
-    - name: api
-      port: 8086
-      targetPort: 8086
+    - name: ssh
+      port: 22
+      targetPort: 22
+    - name: http
+      port: 3000
+      targetPort: 3000
   selector:
-    app: influxdb
+    app: gogs
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: influxdb
+  name: gogs
 spec:
   rules:
-  - host: influxdb.{{ domain }}
+  - host: gogs.{{ domain }}
     http:
       paths:
       - backend:
-          serviceName: influxdb
-          servicePort: api
+          serviceName: gogs
+          servicePort: http

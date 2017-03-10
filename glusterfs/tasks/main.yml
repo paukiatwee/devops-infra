@@ -1,42 +1,63 @@
-- name: Ensure GlusterFS related packages are installed
-  yum: name="{{ item }}"
+- name: Ensure Gluster related packages are installed
+  yum: name={{ item }}
   with_items:
-    - centos-release-gluster38
+    - centos-release-gluster39
+
+- name: Ensure Gluster related packages are installed
+  yum: name={{ item }}
+  with_items:
     - glusterfs
-    - gluster-cli
     - glusterfs-server
 
-- name: Ensure GlusterFS related services are started
+- name: Ensure Gluster related services are started
   service: name="{{ item }}" enabled=yes state=started
   with_items:
     - glusterd
 
-- name: Ensure sdb partion is created
-  command: pvcreate /dev/sdb
+- name: Create brick directory
+  file: name=/data/brick state=directory
 
-- name: Ensure volume group is created
-  command: vgcreate vg_gluster /dev/sdb
-
-- name: Ensure logical volume is created
-  command: lvcreate -L 5G -n brick1 vg_gluster
-
-- name: create gluster volume
-  gluster_volume:
-    state: present
-    name: glustervol1
-    bricks: /bricks/brick1/g1
-    rebalance: yes
-    cluster:
-      - 192.0.2.10
-      - 192.0.2.11
-  run_once: true
-
-- name: Ensure data directory is created
-  file: path=/data/brick state=directory
-
-- name: Probe storage master
-  command: gluster peer probe {{ storage_master }}
+- name: Create mount directory
+  file: name=/mount/k8s/{{ item }} state=directory
+  with_items: "{{ gluster_volumes }}"
 
 - name: Probe storage nodes
   command: gluster peer probe {{ item }}
-  with_items: {{ storage_nodes }}
+  with_items:
+    - 192.168.88.88
+    # - 192.168.88.3
+  ignore_errors: true
+
+- name: Create Gluster volumes
+  gluster_volume:
+    state: present
+    name: "{{ item }}"
+    # replicas: 2
+    bricks: /data/brick/{{ item }}1,/data/brick/{{ item }}2
+    force: true
+    rebalance: true
+    cluster:
+      - 192.168.88.88
+      # - 192.168.88.3
+  run_once: true
+  with_items: "{{ gluster_volumes }}"
+
+- name: Start Gluster volumes
+  gluster_volume:
+    state: started
+    name: "{{ item }}"
+  with_items: "{{ gluster_volumes }}"
+
+- name: Mount Gluster volumes
+  mount:
+    name: /mnt/k8s/{{ item }}
+    src: 192.168.88.88:{{ item }}
+    fstype: glusterfs
+    boot: true
+    state: mounted
+  with_items: "{{ gluster_volumes }}"
+
+# sudo yum install -y centos-release-gluster39
+# sudo yum install -y glusterfs glusterfs-server
+# sudo mkdir -p /data/brick
+# sudo systemctl enable glusterd && sudo systemctl start glusterd

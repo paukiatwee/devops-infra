@@ -57,15 +57,21 @@
 - name: Copy Kubernetes resources
   template: src={{ item }} dest=/etc/k8s/{{ item }}
   with_items:
-  - traefik.yml
-  - influxdb.yml
-  - grafana.yml
-  - default-backend.yml
+    - gluster-endpoint.yml
+    - traefik.yml
+    - influxdb.yml
+    - grafana.yml
+    - gogs.yml
+    - jenkins.yml
+    - default-backend.yml
 
 - name: Create Kubernetes resources
   command: "{{ item }} chdir=/etc/k8s/"
   with_items:
+    - kubectl apply -f gluster-endpoint.yml
     - kubectl apply -f traefik.yml
     - kubectl apply -f influxdb.yml
     - kubectl apply -f grafana.yml
+    - kubectl apply -f gogs.yml
+    - kubectl apply -f jenkins.yml
     - kubectl apply -f default-backend.yml

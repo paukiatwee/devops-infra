@@ -2,16 +2,21 @@
 DevOps infrastructure for agile development team.
 
 ### Powered By
-* Docker
-* Kubernetes
-* Traefik
-* InfuxDB
-* Telegraf
-* Grafana
-* Glusterfs
+| Component               | Implementation |
+|-------------------------|----------------|
+| Container Runtime       | Docker         |
+| Container Orchestration | Kubernetes     |
+| Load Balancer           | Traefik        |
+| Distributed Storage     | Gluster        |
+| Time Series Database    | InfluxDB       |
+| Monitoring Agent        | Telegraf       |
+| Monitoring Dashboard    | Grafana        |
 
 ### Road Map
-* Authentication & Authorization
-* SCM
-* CI & CD
-* IaaS Orchestration
+| Component                      | Implementation |
+|--------------------------------|----------------|
+| Authentication & Authorization | ?              |
+| SCM                            | Gogs           |
+| CI & CD                        | Jenkins        |
+| IaaS Orchestration             | Terraform      |
+| Backup                         | ?              |

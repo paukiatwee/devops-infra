@@ -4,6 +4,15 @@
   vars:
     k8s_master: 192.168.88.88
     domain: 192.168.88.88.nip.io
+    storage_nodes:
+      - 192.168.88.2
+      - 192.168.88.3
+    gluster_volumes:
+      - influxdb-volume
+      - grafana-volume
+      - gogs-volume
+      - jenkins-volume
   roles:
+    - glusterfs
     - kubernetes
     - telegraf

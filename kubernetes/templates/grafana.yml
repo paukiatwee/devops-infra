@@ -1,3 +1,29 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana-volume
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  glusterfs:
+    endpoints: gluster-cluster
+    path: grafana-volume
+    readOnly: false
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-claim
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+     requests:
+       storage: 1Gi
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -19,8 +45,8 @@ spec:
         - containerPort: 3000
       volumes:
       - name: grafana-volume
-        hostPath:
-          path: /var/k8s/grafana
+        persistentVolumeClaim:
+          claimName: grafana-claim
 ---
 apiVersion: v1
 kind: Service

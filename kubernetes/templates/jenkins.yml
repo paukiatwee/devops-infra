@@ -1,74 +1,74 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: influxdb-volume
+  name: jenkins-volume
 spec:
   capacity:
-    storage: 5Gi
+    storage: 2Gi
   accessModes:
     - ReadWriteMany
   glusterfs:
     endpoints: gluster-cluster
-    path: influxdb-volume
+    path: jenkins-volume
     readOnly: false
   persistentVolumeReclaimPolicy: Retain
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: influxdb-claim
+  name: jenkins-claim
 spec:
   accessModes:
   - ReadWriteMany
   resources:
      requests:
-       storage: 5Gi
+       storage: 2Gi
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: influxdb
+  name: jenkins
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: influxdb
+        app: jenkins
     spec:
       containers:
-      - name: influxdb
-        image: influxdb
+      - name: jenkins
+        image: jenkins
         volumeMounts:
-        - name: influxdb-volume
-          mountPath: /var/lib/influxdb
+        - name: jenkins-volume
+          mountPath: /var/jenkins_home
         ports:
-        - containerPort: 8086
+        - containerPort: 8080
       volumes:
-      - name: influxdb-volume
+      - name: jenkins-volume
         persistentVolumeClaim:
-          claimName: influxdb-claim
+          claimName: jenkins-claim
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: influxdb
+  name: jenkins
 spec:
   ports:
-    - name: api
-      port: 8086
-      targetPort: 8086
+    - name: http
+      port: 8080
+      targetPort: 8080
   selector:
-    app: influxdb
+    app: jenkins
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: influxdb
+  name: jenkins
 spec:
   rules:
-  - host: influxdb.{{ domain }}
+  - host: jenkins.{{ domain }}
     http:
       paths:
       - backend:
-          serviceName: influxdb
-          servicePort: api
+          serviceName: jenkins
+          servicePort: http
