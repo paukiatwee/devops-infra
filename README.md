@@ -11,12 +11,12 @@ DevOps infrastructure for agile development team.
 | Time Series Database    | InfluxDB       |
 | Monitoring Agent        | Telegraf       |
 | Monitoring Dashboard    | Grafana        |
+| SCM                     | Gogs           |
+| CI & CD                 | Jenkins        |
 
 ### Road Map
 | Component                      | Implementation |
 |--------------------------------|----------------|
 | Authentication & Authorization | ?              |
-| SCM                            | Gogs           |
-| CI & CD                        | Jenkins        |
 | IaaS Orchestration             | Terraform      |
 | Backup                         | ?              |
