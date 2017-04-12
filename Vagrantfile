@@ -16,6 +16,8 @@ Vagrant.configure("2") do |config|
   # boxes at https://atlas.hashicorp.com/search.
   config.vm.box = "centos/7"
 
+  config.vm.define "k8s-master.example.com"
+
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
@@ -73,5 +75,10 @@ Vagrant.configure("2") do |config|
   # SHELL
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "playbook.yml"
+    # ansible.verbose = "vvv"
+    ansible.groups = {
+      "k8s_master" => ["k8s-master.example.com"],
+      "gluster_nodes" => ["k8s-master.example.com"]
+    }
   end
 end
