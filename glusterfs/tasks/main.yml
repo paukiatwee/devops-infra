@@ -22,23 +22,19 @@
   with_items: "{{ gluster_volumes }}"
 
 - name: Probe storage nodes
-  command: gluster peer probe {{ item }}
-  with_items:
-    - 192.168.88.88
-    # - 192.168.88.3
+  command: gluster peer probe {{ hostvars[item]['ansible_' + network_interface]['ipv4']['address'] }}
+  with_items: "{{ groups.gluster_nodes }}"
   ignore_errors: true
 
 - name: Create Gluster volumes
   gluster_volume:
     state: present
     name: "{{ item }}"
-    # replicas: 2
-    bricks: /data/brick/{{ item }}1,/data/brick/{{ item }}2
+    replicas: 2
+    bricks: /data/brick/{{ item }}
     force: true
     rebalance: true
-    cluster:
-      - 192.168.88.88
-      # - 192.168.88.3
+    cluster: "{{ groups['gluster_nodes'] | map('extract', hostvars, ['ansible_' + network_interface, 'ipv4', 'address']) | join(',') }}"
   run_once: true
   with_items: "{{ gluster_volumes }}"
 
@@ -51,13 +47,8 @@
 - name: Mount Gluster volumes
   mount:
     name: /mnt/k8s/{{ item }}
-    src: 192.168.88.88:{{ item }}
+    src: localhost:{{ item }}
     fstype: glusterfs
     boot: true
     state: mounted
   with_items: "{{ gluster_volumes }}"
-
-# sudo yum install -y centos-release-gluster39
-# sudo yum install -y glusterfs glusterfs-server
-# sudo mkdir -p /data/brick
-# sudo systemctl enable glusterd && sudo systemctl start glusterd

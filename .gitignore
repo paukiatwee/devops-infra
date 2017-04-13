@@ -2,3 +2,5 @@
 playbook.retry
 admin.conf
 servers
+inventory
+tmp

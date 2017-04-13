@@ -20,3 +20,8 @@ DevOps infrastructure for agile development team.
 | Authentication & Authorization | ?              |
 | IaaS Orchestration             | Terraform      |
 | Backup                         | ?              |
+
+## Getting Started
+```
+ansible-playbook -i inventory playbook.yml
+```

@@ -1,0 +1,27 @@
+- name: Ensure EPEL release is installed
+  yum: name={{ item }}
+  with_items:
+    - epel-release
+
+- name: Ensure Nginx related packages are installed
+  yum: name={{ item }}
+  with_items:
+    - nginx
+    - certbot
+
+- name: Ensure Nginx related services are started
+  service: name={{ item }} enabled=yes state=started
+  with_items:
+    - nginx
+
+- name: Ensure Nginx config is enabled
+  template: src=nginx.conf dest=/etc/nginx/nginx.conf
+  register: nginx_conf
+
+- name: Ensure Kubernetes config is enabled
+  template: src=kubernetes.conf dest=/etc/nginx/conf.d/kubernetes.conf
+  register: kubernetes_conf
+
+- name: Restart Nginx if needed
+  service: name=nginx state=restarted
+  when: nginx_conf.changed or kubernetes_conf.changed

@@ -1,0 +1,13 @@
+- name: Ensure Docker related packages are installed
+  yum: name="{{ item }}"
+  with_items:
+    - docker
+
+- name: Enable net.bridge.bridge-nf-call-iptables
+  sysctl: name=net.bridge.bridge-nf-call-iptables value=1 sysctl_set=yes state=present
+  ignore_errors: yes
+
+- name: Ensure Docker related services are started
+  service: name="{{ item }}" enabled=yes state=started
+  with_items:
+    - docker

@@ -3,7 +3,9 @@ kind: Endpoints
 metadata:
   name: gluster-cluster 
 subsets:
+{% for host in groups['gluster_nodes'] %}
   - addresses:
-      - ip: 192.168.88.88
+      - ip: "{{ hostvars[host]['ansible_default_ipv4']['address'] }}"
     ports:
       - port: 1
+{% endfor %}
