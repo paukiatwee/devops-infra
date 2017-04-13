@@ -1,4 +1,4 @@
-- name: Ensure EPEL release is installed
+- name: Ensure EPEL repository is installed
   yum: name={{ item }}
   with_items:
     - epel-release
