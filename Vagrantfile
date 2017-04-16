@@ -11,6 +11,10 @@ Vagrant.configure("2") do |config|
     k8s_master.vm.box = "centos/7"
     k8s_master.vm.hostname = "k8s-master"
     k8s_master.vm.network "private_network", ip: "192.168.88.88"
+    k8s_master.vm.provider "virtualbox" do |v|
+      v.memory = 4096
+      v.cpus = 2
+    end
   end
 
   config.vm.define "worker01" do |worker|

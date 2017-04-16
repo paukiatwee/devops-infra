@@ -73,6 +73,7 @@ spec:
   - host: gogs.{{ domain }}
     http:
       paths:
-      - backend:
+      - path: /
+        backend:
           serviceName: gogs
           servicePort: http

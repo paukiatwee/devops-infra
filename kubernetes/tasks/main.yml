@@ -7,9 +7,15 @@
     gpgcheck: no
     repo_gpgcheck: no
 
+- name: Ensure Gluster related packages are installed
+  yum: name={{ item }}
+  with_items:
+    - centos-release-gluster39
+
 - name: Ensure Kubernetes related packages are installed
   yum: name="{{ item }}"
   with_items:
+    - glusterfs-client
     - kubelet
     - kubeadm
     - kubectl
@@ -23,25 +29,15 @@
   with_items:
     - kubelet
 
-- name: Ensure 10-kubeadm.conf is fixed
-  file: src=kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-
-- name: Init Kubernetes
-  command: kubeadm init --apiserver-advertise-address {{ hostvars[groups['k8s_master'][0]]['ansible_default_ipv4']['address'] }}
-
-- name: Install Kubernetes network add-on
-  command: kubectl apply -f https://git.io/weave-kube-1.6
-
-- name: Ensure master is available for running pods
-  command: kubectl taint nodes --all node-role.kubernetes.io/master-
-
 - name: Ensure Kubernetes resources directory exist
   file: name=/etc/k8s state=directory
 
 - name: Copy Kubernetes resources
   template: src={{ item }} dest=/etc/k8s/{{ item }}
   with_items:
-    - gluster-endpoint.yml
+    - patch.sh
+    - kubeadm.conf
+    - gluster.yml
     - traefik.yml
     - influxdb.yml
     - grafana.yml
@@ -49,13 +45,34 @@
     - jenkins.yml
     - default-backend.yml
 
+- name: Init Kubernetes
+  command: kubeadm init --apiserver-advertise-address {{ hostvars[groups['k8s_master'][0]]['ansible_' + network_interface]['ipv4']['address'] }}
+
+- name: Ensure kube config is exist
+  file: path=/home/vagrant/.kube state=directory owner=vagrant group=vagrant
+
+- name: Ensure kube config is exist
+  file: path=/root/.kube state=directory owner=root group=root
+
+- name: Init kubectl config
+  copy: src=/etc/kubernetes/admin.conf dest=/home/vagrant/.kube/config remote_src=yes owner=vagrant group=vagrant
+
+- name: Init kubectl config
+  copy: src=/etc/kubernetes/admin.conf dest=/root/.kube/config remote_src=yes owner=root group=root
+
+- name: Install Kubernetes network add-on
+  command: kubectl apply -f https://git.io/weave-kube-1.6
+
+- name: Ensure master is available for running pods
+  command: kubectl taint nodes --all node-role.kubernetes.io/master-
+
 - name: Create Kubernetes resources
   command: "{{ item }} chdir=/etc/k8s/"
   with_items:
-    - kubectl apply -f gluster-endpoint.yml
+    - kubectl apply -f gluster.yml
     - kubectl apply -f traefik.yml
     - kubectl apply -f influxdb.yml
     - kubectl apply -f grafana.yml
-    - kubectl apply -f gogs.yml
-    - kubectl apply -f jenkins.yml
-    - kubectl apply -f default-backend.yml
+    # - kubectl apply -f gogs.yml
+    # - kubectl apply -f jenkins.yml
+    # - kubectl apply -f default-backend.yml

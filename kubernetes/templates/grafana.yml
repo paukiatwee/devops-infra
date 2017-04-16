@@ -69,6 +69,7 @@ spec:
   - host: grafana.{{ domain }}
     http:
       paths:
-      - backend:
+      - path: /
+        backend:
           serviceName: grafana
           servicePort: http

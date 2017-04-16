@@ -69,6 +69,7 @@ spec:
   - host: jenkins.{{ domain }}
     http:
       paths:
-      - backend:
+      - path: /
+        backend:
           serviceName: jenkins
           servicePort: http

@@ -3,7 +3,7 @@
   become: true
   vars:
     domain: 192.168.88.88.nip.io
-    network_interface: eth0
+    network_interface: eth1
     gluster_volumes:
       - influxdb-volume
       - grafana-volume
@@ -17,9 +17,8 @@
   become: true
   vars:
     domain: 192.168.88.88.nip.io
-    network_interface: eth0
+    network_interface: eth1
   roles:
-    - docker
     - kubernetes
-    - telegraf
     - nginx
+    - telegraf

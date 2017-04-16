@@ -69,6 +69,7 @@ spec:
   - host: influxdb.{{ domain }}
     http:
       paths:
-      - backend:
+      - path: /
+        backend:
           serviceName: influxdb
           servicePort: api
