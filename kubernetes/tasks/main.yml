@@ -2,7 +2,7 @@
   yum_repository:
     name: kubernetes
     description: Kubernetes
-    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64-unstable
     gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg  https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
     gpgcheck: no
     repo_gpgcheck: no
@@ -24,6 +24,12 @@
 - name: Ensure SELinux is in Permissive mode
   selinux: policy=targeted state=permissive
 
+- name: Check if kubelet is running
+  command: systemctl status kubelet
+  ignore_errors: yes
+  changed_when: false
+  register: kubelet_status
+
 - name: Ensure Kubernetes related services are started
   service: name="{{ item }}" enabled=yes state=started
   with_items:
@@ -37,6 +43,7 @@
   with_items:
     - patch.sh
     - kubeadm.conf
+    - kubeadm-dns.conf
     - gluster.yml
     - traefik.yml
     - influxdb.yml
@@ -46,25 +53,39 @@
     - default-backend.yml
 
 - name: Init Kubernetes
-  command: kubeadm init --apiserver-advertise-address {{ hostvars[groups['k8s_master'][0]]['ansible_' + network_interface]['ipv4']['address'] }}
+  command: kubeadm init --pod-network-cidr 192.168.0.0/16 --service-cidr 192.168.0.0/16 --apiserver-advertise-address {{ hostvars[groups['k8s_master'][0]]['ansible_' + network_interface]['ipv4']['address'] }}
+  when: kubelet_status | failed
 
-- name: Ensure kube config is exist
-  file: path=/home/vagrant/.kube state=directory owner=vagrant group=vagrant
+- name: Override kubernetes DNS config
+  template: src=kubeadm-dns.conf dest=/etc/systemd/system/kubelet.service.d/20-kubeadm-dns.conf
+
+- name: Restart kubelet service
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: kubelet
 
 - name: Ensure kube config is exist
   file: path=/root/.kube state=directory owner=root group=root
 
 - name: Init kubectl config
-  copy: src=/etc/kubernetes/admin.conf dest=/home/vagrant/.kube/config remote_src=yes owner=vagrant group=vagrant
+  copy: src=/etc/kubernetes/admin.conf dest=/root/.kube/config remote_src=yes owner=root group=root
+
+- name: Ensure kube config is exist
+  file: path=/home/vagrant/.kube state=directory owner=vagrant group=vagrant
+  ignore_errors: yes
 
 - name: Init kubectl config
-  copy: src=/etc/kubernetes/admin.conf dest=/root/.kube/config remote_src=yes owner=root group=root
+  copy: src=/etc/kubernetes/admin.conf dest=/home/vagrant/.kube/config remote_src=yes owner=vagrant group=vagrant
+  ignore_errors: yes
 
 - name: Install Kubernetes network add-on
   command: kubectl apply -f https://git.io/weave-kube-1.6
+  when: kubelet_status | failed
 
 - name: Ensure master is available for running pods
   command: kubectl taint nodes --all node-role.kubernetes.io/master-
+  when: kubelet_status | failed
 
 - name: Create Kubernetes resources
   command: "{{ item }} chdir=/etc/k8s/"
@@ -73,6 +94,6 @@
     - kubectl apply -f traefik.yml
     - kubectl apply -f influxdb.yml
     - kubectl apply -f grafana.yml
-    # - kubectl apply -f gogs.yml
-    # - kubectl apply -f jenkins.yml
-    # - kubectl apply -f default-backend.yml
+    - kubectl apply -f gogs.yml
+    - kubectl apply -f jenkins.yml
+    - kubectl apply -f default-backend.yml
