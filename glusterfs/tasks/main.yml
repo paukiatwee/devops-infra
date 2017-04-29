@@ -33,7 +33,6 @@
     replicas: 2
     bricks: /data/brick/{{ item }}
     force: true
-    rebalance: true
     cluster: "{{ groups['gluster_nodes'] | map('extract', hostvars, ['ansible_' + network_interface, 'ipv4', 'address']) | join(',') }}"
   run_once: true
   with_items: "{{ gluster_volumes }}"
