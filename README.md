@@ -17,11 +17,14 @@ DevOps infrastructure for agile development team.
 ### Road Map
 | Component                      | Implementation |
 |--------------------------------|----------------|
+| HTTPS                          | ?              |
 | Authentication & Authorization | ?              |
 | IaaS Orchestration             | Terraform      |
 | Backup                         | ?              |
 
 ## Getting Started
 ```
-ansible-playbook -i inventory playbook.yml
+cd <PROJECT>
+./reload.sh # boot three virtualbox vms
+./play.sh # configu vms
 ```
