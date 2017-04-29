@@ -3,6 +3,10 @@ kind: Ingress
 metadata:
   name: default-ingress
 spec:
-  backend:
-    serviceName: grafana
-    servicePort: http
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: grafana
+          servicePort: http
