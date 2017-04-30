@@ -4,7 +4,7 @@ metadata:
   name: gogs-volume
 spec:
   capacity:
-    storage: 2Gi
+    storage: 5Gi
   accessModes:
     - ReadWriteMany
   glusterfs:
@@ -22,7 +22,7 @@ spec:
   - ReadWriteMany
   resources:
      requests:
-       storage: 2Gi
+       storage: 5Gi
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
