@@ -13,8 +13,13 @@
 
 - name: Ensure Telegraf conf is updated
   template: src=telegraf.conf dest=/etc/telegraf/telegraf.conf
+  register: telegraf_conf
 
 - name: Ensure Telegraf service is started
   service: name="{{item}}" enabled=yes state=started
   with_items:
     - telegraf
+
+- name: Restart Telegraf if needed
+  service: name=ngitelegrafnx state=restarted
+  when: telegraf_conf.changed
